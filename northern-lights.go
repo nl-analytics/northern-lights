@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/mssola/user_agent"
 )
 
 var b bytes.Buffer
@@ -18,6 +20,13 @@ var OnePixelGIF = b.Bytes()
 func handler(w http.ResponseWriter, r *http.Request) {
 	for key, vals := range r.URL.Query() {
 		log.Printf("%s: %s\n", key, vals[0])
+	}
+
+	ua := r.Header.Get("User-Agent")
+
+	if ua != "" {
+		parsedUa := user_agent.New(ua)
+		log.Printf("%v\n", parsedUa.OSInfo().Name)
 	}
 
 	w.Header().Add("Content-Type", "image/gif")
