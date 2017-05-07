@@ -8,7 +8,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/mssola/user_agent"
+	"github.com/avct/uasurfer"
 )
 
 var b bytes.Buffer
@@ -25,8 +25,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	ua := r.Header.Get("User-Agent")
 
 	if ua != "" {
-		parsedUa := user_agent.New(ua)
-		log.Printf("%v\n", parsedUa.OSInfo().Name)
+		parsedUa := uasurfer.Parse(ua)
+		log.Printf("%v\n", parsedUa.Browser.Name)
 	}
 
 	w.Header().Add("Content-Type", "image/gif")
