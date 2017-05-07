@@ -6,7 +6,9 @@ import "log"
 // Connection is the client for the Influx DB
 var Connection influx.Client
 
-func connect(username string, password string, addr string) influx.Client {
+// Connect to an influx database
+// Returns a database client
+func Connect(username string, password string, addr string) influx.Client {
 
 	if Connection == nil {
 		var err error
