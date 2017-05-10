@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/avct/uasurfer"
@@ -15,6 +16,15 @@ import (
 
 	influx "github.com/influxdata/influxdb/client/v2"
 )
+
+// VersionString converts a uasurfer.Version into a string
+func VersionString(v uasurfer.Version) string {
+	if v.Major == 0 {
+		return ""
+	}
+
+	return strconv.Itoa(v.Major) + "." + strconv.Itoa(v.Minor) + "." + strconv.Itoa(v.Patch)
+}
 
 var b bytes.Buffer
 var err = gif.Encode(&b, image.NewAlpha(image.Rect(0, 0, 1, 1)), nil)
@@ -26,6 +36,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	tags := make(map[string]string)
 
+	// TODO: set a limit on arguments
 	for key, vals := range r.URL.Query() {
 		log.Printf("%s: %s\n", key, vals[0])
 		tags[key] = vals[0]
@@ -35,6 +46,29 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	if ua != "" {
 		parsedUa := uasurfer.Parse(ua)
+
+		tags["browser"] = parsedUa.Browser.Name.String()
+		tags["browser_ver"] = VersionString(parsedUa.Browser.Version)
+
+		if parsedUa.Browser.Version.Major != 0 {
+			tags["browser_major"] = strconv.Itoa(parsedUa.Browser.Version.Major)
+		}
+
+		tags["os"] = parsedUa.OS.Name.String()
+
+		tags["os_ver"] = VersionString(parsedUa.OS.Version)
+
+		if parsedUa.OS.Version.Major != 0 {
+			// OS X versions are weird
+			if parsedUa.OS.Name == uasurfer.OSMacOSX {
+				tags["os_major"] = strconv.Itoa(parsedUa.OS.Version.Minor)
+			} else {
+				tags["os_major"] = strconv.Itoa(parsedUa.OS.Version.Major)
+			}
+		}
+
+		tags["device_type"] = parsedUa.DeviceType.String()
+
 		log.Printf("%v\n", parsedUa.Browser.Name)
 	}
 
@@ -48,7 +82,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pt, _ := influx.NewPoint("hello", tags, map[string]interface{}{
-		"hello": 51.5,
+		"fpt": "",
 	})
 
 	points.AddPoint(pt)
