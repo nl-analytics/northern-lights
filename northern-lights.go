@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/rand"
+	"fmt"
 	"image"
 	"image/gif"
 	"io"
@@ -13,6 +15,8 @@ import (
 	"github.com/avct/uasurfer"
 
 	"./database"
+
+	"encoding/hex"
 
 	influx "github.com/influxdata/influxdb/client/v2"
 )
@@ -98,7 +102,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, bytes.NewReader(OnePixelGIF))
 }
 
+func randomFingerprint(w http.ResponseWriter, r *http.Request) {
+	bytes := make([]byte, 8)
+
+	_, err := rand.Read(bytes)
+
+	if err != nil {
+		r.Response.StatusCode = 500
+	} else {
+		fmt.Fprintf(w, "%s", hex.EncodeToString(bytes))
+	}
+}
+
 func main() {
 	http.HandleFunc("/aurora", handler)
+	http.HandleFunc("/fp", randomFingerprint)
 	http.ListenAndServe(":3030", nil)
 }
