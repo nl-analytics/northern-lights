@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -94,7 +95,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	tags["ip"] = ip
 
-	// TODO: break URL into components
+	// break URL into components
+	if tags["url"] != "" {
+		pageURL, err := url.Parse(tags["url"])
+		if err == nil {
+			tags["host"] = pageURL.Host
+			tags["scheme"] = pageURL.Scheme
+			tags["path"] = pageURL.Path
+		}
+	}
 
 	connection := database.Connect("test", "test", "http://xenial.dev:8086")
 	points, err := influx.NewBatchPoints(influx.BatchPointsConfig{
