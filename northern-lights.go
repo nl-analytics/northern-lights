@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/avct/uasurfer"
@@ -82,6 +83,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		log.Printf("%v\n", parsedUa.Browser.Name)
 	}
+
+	// Remove port from IP
+	ip := r.RemoteAddr[0:strings.LastIndex(r.RemoteAddr, ":")]
+
+	// Remove square brackets from IPv6
+	if ip[0] == '[' {
+		ip = ip[1:(len(ip) - 1)]
+	}
+
+	tags["ip"] = ip
 
 	// TODO: break URL into components
 
