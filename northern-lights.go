@@ -40,10 +40,17 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	tags := make(map[string]string)
 
+	var fpt string
+
 	// TODO: set a limit on arguments
 	for key, vals := range r.URL.Query() {
 		log.Printf("%s: %s\n", key, vals[0])
-		tags[key] = vals[0]
+
+		if key != "fpt" {
+			tags[key] = vals[0]
+		} else {
+			fpt = vals[0]
+		}
 	}
 
 	ua := r.Header.Get("User-Agent")
@@ -86,7 +93,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pt, _ := influx.NewPoint("hello", tags, map[string]interface{}{
-		"fpt": "",
+		"fpt": fpt,
 	})
 
 	points.AddPoint(pt)
