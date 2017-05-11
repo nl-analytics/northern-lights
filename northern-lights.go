@@ -83,6 +83,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%v\n", parsedUa.Browser.Name)
 	}
 
+	// TODO: break URL into components
+
 	connection := database.Connect("test", "test", "http://xenial.dev:8086")
 	points, err := influx.NewBatchPoints(influx.BatchPointsConfig{
 		Database: "test",
