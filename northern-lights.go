@@ -12,7 +12,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/avct/uasurfer"
 
@@ -122,7 +121,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	points.AddPoint(pt)
 
-	log.Println(connection.Ping(time.Second))
 	err = connection.Write(points)
 
 	if err != nil {
