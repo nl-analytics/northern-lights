@@ -19,6 +19,8 @@ import (
 
 	"encoding/hex"
 
+	"encoding/json"
+
 	influx "github.com/influxdata/influxdb/client/v2"
 )
 
@@ -37,21 +39,59 @@ var err = gif.Encode(&b, image.NewAlpha(image.Rect(0, 0, 1, 1)), nil)
 // OnePixelGIF - The data for a one pixel transparent GIF
 var OnePixelGIF = b.Bytes()
 
+// ActionEvent is to represent POST data
+type ActionEvent struct {
+	Fpt  string
+	Vars map[string]string
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
 
 	tags := make(map[string]string)
 
 	var fpt string
 
+	// Get variables from the request
 	// TODO: set a limit on arguments
-	for key, vals := range r.URL.Query() {
-		log.Printf("%s: %s\n", key, vals[0])
 
-		if key != "fpt" {
-			tags[key] = vals[0]
-		} else {
-			fpt = vals[0]
+	// GET request
+	if r.Method == "GET" {
+		for key, vals := range r.URL.Query() {
+			log.Printf("%s: %s\n", key, vals[0])
+
+			if key != "fpt" {
+				tags[key] = vals[0]
+			} else {
+				fpt = vals[0]
+			}
 		}
+	} else if r.Method == "POST" {
+		if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+			r.Response.StatusCode = 400
+			fmt.Fprint(w, "Requests must be JSON")
+			return
+		}
+
+		var postData ActionEvent
+
+		decoder := json.NewDecoder(r.Body)
+
+		err := decoder.Decode(&postData)
+
+		if err != nil {
+			r.Response.StatusCode = 500
+			log.Println(err)
+			return
+		}
+
+		fpt = postData.Fpt
+
+		for key, val := range postData.Vars {
+			tags[key] = val
+		}
+	} else {
+		r.Response.StatusCode = 405
+		return
 	}
 
 	ua := r.Header.Get("User-Agent")
@@ -127,8 +167,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	w.Header().Add("Content-Type", "image/gif")
-	io.Copy(w, bytes.NewReader(OnePixelGIF))
+	// Return a 1px GIF if this is a GET request
+	if r.Method == "GET" {
+		// TODO: add no-cache header
+		w.Header().Add("Content-Type", "image/gif")
+		io.Copy(w, bytes.NewReader(OnePixelGIF))
+	}
 }
 
 func randomFingerprint(w http.ResponseWriter, r *http.Request) {
