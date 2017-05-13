@@ -60,14 +60,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if ua != "" {
 		parsedUa := uasurfer.Parse(ua)
 
-		tags["browser"] = parsedUa.Browser.Name.String()
+		tags["browser"] = parsedUa.Browser.Name.String()[7:] // Remove "Browser" prefix added by uasurfer
 		tags["browser_ver"] = VersionString(parsedUa.Browser.Version)
 
 		if parsedUa.Browser.Version.Major != 0 {
 			tags["browser_major"] = strconv.Itoa(parsedUa.Browser.Version.Major)
 		}
 
-		tags["os"] = parsedUa.OS.Name.String()
+		tags["os"] = parsedUa.OS.Name.String()[2:] // Remove "OS" prefix added by uasurfer
 
 		tags["os_ver"] = VersionString(parsedUa.OS.Version)
 
@@ -80,7 +80,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		tags["device_type"] = parsedUa.DeviceType.String()
+		tags["device_type"] = parsedUa.DeviceType.String()[6:] // Remove "Device" prefix added by uasurfer
 
 		log.Printf("%v\n", parsedUa.Browser.Name)
 	}
